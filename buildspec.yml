@@ -1,0 +1,24 @@
+version: 0.2
+
+env:
+  variables:
+    S3_BUCKET: "xor-lambdas"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12
+  pre_build:
+    commands:
+      - npm ci
+  build:
+    commands:
+      - GIT_HASH=$(git rev-parse --verify HEAD)
+      - echo "Building Module"
+      - npm run publish
+      - |
+        if [[ "$CODEBUILD_WEBHOOK_TRIGGER" = branch/main ]]; then
+          echo "Deploying artifact..."
+          npm run deploy
+          echo "Successfully deployed artifact!"
+        fi
